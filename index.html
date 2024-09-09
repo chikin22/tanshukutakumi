@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL短縮サービス</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+        h1 {
+            color: #4a90e2;
+            text-align: center;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        input, button {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            width: calc(100% - 22px);
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4a90e2;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #357abd;
+        }
+        button:active {
+            background-color: #2d6aa2;
+        }
+        p {
+            font-size: 1.1em;
+            color: #666;
+        }
+        label {
+            font-weight: bold;
+        }
+    </style>
+    <script>
+        let shortenedUrl = '';
+
+        async function shortenUrl() {
+            const longUrl = document.getElementById('longUrl').value;
+            const apiKey = 'ca17ea14f5c2afc3fe90afdde75c302e4691c3e3'; // セキュリティのため、サーバーサイドで処理するのが推奨されます
+
+            if (!longUrl) {
+                alert('短縮したいURLを入力してください。');
+                return;
+            }
+
+            try {
+                const response = await fetch('https://api-ssl.bitly.com/v4/shorten', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${apiKey}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ long_url: longUrl })
+                });
+
+                const data = await response.json();
+                if (response.ok && data.link) {
+                    shortenedUrl = data.link;
+                    document.getElementById('shortenedUrl').textContent = `短縮URL: ${shortenedUrl}`;
+                } else {
+                    document.getElementById('shortenedUrl').textContent = '短縮URLの作成に失敗しました。';
+                }
+            } catch (error) {
+                document.getElementById('shortenedUrl').textContent = 'エラーが発生しました。';
+                console.error('エラー:', error);
+            }
+        }
+
+        function copyUrl() {
+            if (shortenedUrl) {
+                navigator.clipboard.writeText(shortenedUrl)
+                    .then(() => alert('短縮URLがコピーされました。'))
+                    .catch(err => console.error('コピーに失敗しました:', err));
+            } else {
+                alert('短縮URLがまだ生成されていません。');
+            }
+        }
+
+        function openUrl() {
+            if (shortenedUrl) {
+                window.open(shortenedUrl, '_blank');
+            } else {
+                alert('短縮URLがまだ生成されていません。');
+            }
+        }
+
+        function reset() {
+            document.getElementById('longUrl').value = '';
+            document.getElementById('shortenedUrl').textContent = '短縮URLがここに表示されます...';
+            shortenedUrl = '';
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>URL短縮サービス</h1>
+        <label for="longUrl">短縮したいURL:</label>
+        <input type="text" id="longUrl" placeholder="例:https://google.com/">
+        <button onclick="shortenUrl()">URLを短縮</button>
+        <button onclick="copyUrl()">コピー</button>
+        <button onclick="openUrl()">開く</button>
+        <button onclick="reset()">再作成</button>
+        <p id="shortenedUrl">短縮URLがここに表示されます...</p>
+    </div>
+</body>
+</html>
